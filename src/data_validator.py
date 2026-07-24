@@ -49,8 +49,8 @@ class DataValidator:
         is_valid_expr = pl.all_horizontal(validation_exprs)
 
         # DEBUG
-        print(f" --- Schema Expressions --- ")
-        print(is_valid_expr)
+        #print(f" --- Schema Expressions --- ")
+        #print(is_valid_expr)
 
         clean_df = df.filter(is_valid_expr)
 

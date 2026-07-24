@@ -28,14 +28,16 @@ from src.data_validator import DataValidator
 from src.reporter import generate_figures, generate_markdown_report
 
 CONFIG_PATH = "config/schema_config.yml"
-
+OUTPUT_REPORT_PATH = "reports/clinical_data_summary.md"
 
 def main():
+    print(f"\nStarting Run...")
     # 1. load config
     config = load_yaml_config(filepath=CONFIG_PATH)
 
     # 2. generate synthetic data
     # for future unit testing, would move to another module
+    print(f"Generating Synthetic Data...")
     np.random.seed(42)
     n = 1000
 
@@ -87,6 +89,7 @@ def main():
     )
 
     # 3. apply standardization
+    print(f"Mapping Columns and Values...")
     col_maps = config["column_mappings"]
     value_maps = config["value_mappings"]
 
@@ -99,19 +102,26 @@ def main():
     )
 
     # as an example, filter procedure data and keep latest
+    print(f"Filtering data...")
     df_proc_filtered = filter_most_recent(
         df=df_proc, patient_id_col="patient_id", date_col="procedure_date"
     )
 
-    # would move this to logging, embed in filter function
-    print(f"Filtered {df_proc.height - df_proc_filtered.height} rows from procedure df")
+    # would move this to logging, embed in filter function, make dynamic
+    print(f"Filtered {df_proc.height - df_proc_filtered.height} rows from procedure df on most recent procedure date\n")
 
     df_readmission = map_column_names(df_src2_raw, col_maps["source_2_readmissions"])
     df_pat = map_column_names(df_src3_raw, col_maps["source_3_baseline"])
-
-    print(df_proc_filtered.head())
-    print(df_readmission.head())
-    print(df_pat.head())
+    
+    print(f"--- Mapped DataFrame Overview --- \n")
+    mapped_df_dict = {
+            "Filtered Procedures": df_proc_filtered,
+            "Readmissions": df_readmission,
+            "Patient Data": df_pat
+            }
+    for name, df in mapped_df_dict.items():
+        print(f"--- {name} ---")
+        print(f"{df.head()}\n")
 
     # 4. merge data and get merge_history
     # default merge how is left
@@ -119,6 +129,7 @@ def main():
     # merge_priority, merge_how, merge_on and loop through merging
     ledger = MergeLedger()
 
+    print("Merging Data...")
     # primary merge
     df_merged = ledger.merge_data(
         left_df=df_proc_filtered,
@@ -135,18 +146,23 @@ def main():
         step_name="procpat_JOIN_readmission",
     )
 
+    print(f"--- Joined Data ---")
     print(df_harmonized.head())
+    print("\n")
 
     # calculate clinical variables and flag outliers via iqr bound detection
     df_features = calculate_clinical_metrics(df_harmonized)
     df_features = flag_iqr_outliers(df_features, column="surgical_duration_min")
 
     # print out df_features to view
+    print("--- Feature Dataset ---")
     print(df_features.head())
+    print("\n")
 
     # filter on outliers to view, cols of interest
     # outlier col = surgical_duration_min_outlier_iqr
     # print out iqr for reference?
+    print(f"\n--- Flagged IQR Outliers ----")
     print(
         df_features.filter(pl.col("surgical_duration_min_outlier_iqr")).select(
             ["surgical_duration_min_outlier_iqr", "surgical_duration_min"]
@@ -167,7 +183,7 @@ def main():
 
     # print out a quick audit summary
     # first print out merge
-    print(f" --- Merge Ledger --- ")
+    print(f"\n--- Merge Ledger --- ")
     for entry in ledger.merge_history:
         print(
             f"Step: {entry['step_name']} | Left Input Shape: {entry['left_input_shape']} | Output Shape: {entry['output_shape']} | Unmatched Pct: {entry['unmatched_pct']:.2f}%"
@@ -175,12 +191,12 @@ def main():
 
     # get metrics on valid vs invalid data
     # can see in invalid rows output, BMI of 999.0
-    print(f" --- Data Output Metrics --- ")
+    print(f"\n--- Data Output Metrics --- ")
     print(f"Len Valid Data: {clean_df.height}")
     print(f"Len Invalid Data: {quarantine_df.height}")
 
     # expect just one row at BMI but random seed could generate different values
-    print(f"Invalid Rows:\n{quarantine_df}")
+    print(f"\nInvalid Rows:\n{quarantine_df}")
 
     # if you wanted to impute values from quarantine -
     # example nullify out of range float value (BMI) and impute strata median
@@ -192,7 +208,8 @@ def main():
     )
 
     print(f"Cleaned BMI:\n{clean_bmi_df}")
-
+    
+    print(f"\nGenerating Figures...")
     # generate figures first
     generate_figures(df=clean_df, output_image_path="reports/figures.png")
 
@@ -200,9 +217,10 @@ def main():
     generate_markdown_report(
         df=clean_df,
         image_filename="figures.png",
-        output_md_path="reports/clinical_data_summary.md",
+        output_md_path=OUTPUT_REPORT_PATH,
     )
 
+    print(f"Report Generated At {OUTPUT_REPORT_PATH}")
 
 if __name__ == "__main__":
     main()
