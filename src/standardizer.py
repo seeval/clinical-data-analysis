@@ -30,3 +30,78 @@ def filter_most_recent(df: pl.DataFrame, patient_id_col: str, date_col: str) -> 
         .group_by(patient_id_col)
         .first()
     )
+
+def impute_quarantine_from_clean(
+        clean_df: pl.DataFrame,
+        quarantine_df: pl.DataFrame,
+        target_cols: list[str],
+        strata_col: str,
+        sentinel_value: float = 999.0
+        ) -> pl.DataFrame:
+        """
+        replaces missing or out of range in quarantine with median from strata in clean df
+        """
+    
+        # helper to create a "filtered" version of a column for median calculation
+        # ensuring sentinel values do not pollute the baseline medians.
+        def clean_expr(col_name):
+            return pl.col(col_name).filter(pl.col(col_name) != sentinel_value)
+    
+        # Compute stratum-level medians (e.g., median BMI for HIP vs KNEE)
+        stratum_medians_lookup = (
+            clean_df
+            .group_by(strata_col)
+            .agg([
+                clean_expr(col).median().alias(f"{col}_ref_median") 
+                for col in target_cols
+            ])
+        )
+        
+        # Compute global medians as a final fallback
+        # Convert to standard Python float/int dictionary for easy fill
+        global_median_map = {
+            col: clean_expr(col).median()
+            for col in target_cols
+        }
+    
+        # --- STEP 2: Nullify Sentinels in Quarantine data ---
+        
+        # Convert all 999.0 (sentinels) to explicit Nulls to trigger .fill_null()
+        quarantine_with_nulls = quarantine_df.with_columns([
+            pl.when(pl.col(col) != sentinel_value)
+            .then(pl.col(col))
+            .otherwise(None) # Forces sentinel values to Null
+            .alias(col)
+            for col in target_cols
+        ])
+    
+        # --- STEP 3: Join and Impute ---
+    
+        # Join the baseline lookup tables onto the quarantine set
+        imputed_df = quarantine_with_nulls.join(
+            stratum_medians_lookup, 
+            on=strata_col, 
+            how="left"
+        )
+    
+        # Create expressions to fill Nulls with stratum median, then global median
+        imputation_exprs = []
+        for col in target_cols:
+            ref_med_col = f"{col}_ref_median"
+            g_med = global_median_map[col]
+            
+            expr = (
+                pl.col(col)
+                .fill_null(pl.col(ref_med_col))  # Tier 1: Clean Stratum median lookup
+                .fill_null(g_med)               # Tier 2: Clean Global median fallback
+                .alias(col)
+            )
+            imputation_exprs.append(expr)
+    
+        # Execute imputation and drop intermediate reference columns
+        cols_to_drop = [f"{col}_ref_median" for col in target_cols]
+        return (
+            imputed_df
+            .with_columns(imputation_exprs)
+            .drop(cols_to_drop)
+        )
