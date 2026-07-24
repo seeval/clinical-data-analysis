@@ -29,7 +29,7 @@ class DataValidator:
                 exprs.append(pl.col(col_name).is_in(check_specs["isin"]))
 
             # does text match regex pattern
-            # patterns pulled fom similar checks in coworker's code 
+            # patterns pulled fom similar checks in coworker's code
             if "regex" in check_specs:
                 exprs.append(pl.col(col_name).str.contains(check_specs["regex"]))
 
@@ -39,7 +39,9 @@ class DataValidator:
 
         return exprs
 
-    def validate_and_quarantine(self, df: pl.DataFrame) -> Tuple[pl.DataFrame, pl.DataFrame]:
+    def validate_and_quarantine(
+        self, df: pl.DataFrame
+    ) -> Tuple[pl.DataFrame, pl.DataFrame]:
         """splits input df into valid records and quarantined records."""
         validation_exprs = self._parse_validation_expressions()
 

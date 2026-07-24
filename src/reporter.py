@@ -6,6 +6,7 @@ import polars as pl
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
     """
     generates bmi box plot and scatter on age x surgical duration
@@ -13,18 +14,20 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
 
     # convert polars df to pandas for seaborn compatibility
     pdf = df.to_pandas()
-    
+
     # map readmission from binary to categorical
-    pdf["readmit_label"] = pdf["readmit_90day"].map({0: "No Readmission", 1: "90-Day Readmit"})
-    
+    pdf["readmit_label"] = pdf["readmit_90day"].map(
+        {0: "No Readmission", 1: "90-Day Readmit"}
+    )
+
     # set theme and subplot options
     sns.set_theme(style="ticks", font="sans-serif")
     fig, axes = plt.subplots(
-            nrows=2, 
-            ncols=1,
-            figsize=(9, 10), 
-            sharex=False,
-            )
+        nrows=2,
+        ncols=1,
+        figsize=(9, 10),
+        sharex=False,
+    )
 
     # color palette
     colors_readmit = {"No Readmission": "#2b5c8f", "90-Day Readmit": "#d95f02"}
@@ -40,12 +43,19 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
         width=0.5,
         linewidth=1.2,
         fliersize=3,
-        ax=axes[0]
+        ax=axes[0],
     )
-    
-    axes[0].set_title("BMI Distribution by Joint Type & Readmission Status", fontsize=12, fontweight="bold", pad=10)
+
+    axes[0].set_title(
+        "BMI Distribution by Joint Type & Readmission Status",
+        fontsize=12,
+        fontweight="bold",
+        pad=10,
+    )
     axes[0].set_xlabel("Surgical Joint Type", fontsize=10, labelpad=6)
-    axes[0].set_ylabel("Body Mass Index (BMI, $\\mathrm{kg/m^2}$)", fontsize=10, labelpad=6)
+    axes[0].set_ylabel(
+        "Body Mass Index (BMI, $\\mathrm{kg/m^2}$)", fontsize=10, labelpad=6
+    )
     axes[0].grid(True, linestyle="--", alpha=0.5, axis="y")
 
     # move legend to top right
@@ -55,9 +65,9 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
         loc="upper left",
         frameon=True,
         facecolor="white",
-        edgecolor="#cccccc"
+        edgecolor="#cccccc",
     )
-    
+
     # scatter of age x surgical_duration
     sns.scatterplot(
         data=pdf,
@@ -68,10 +78,15 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
         alpha=0.6,
         s=35,
         edgecolor="none",
-        ax=axes[1]
+        ax=axes[1],
     )
 
-    axes[1].set_title("Patient Age vs. Surgical Duration by Joint Type", fontsize=12, fontweight="bold", pad=10)
+    axes[1].set_title(
+        "Patient Age vs. Surgical Duration by Joint Type",
+        fontsize=12,
+        fontweight="bold",
+        pad=10,
+    )
     axes[1].set_xlabel("Age at Procedure (Years)", fontsize=10, labelpad=6)
     axes[1].set_ylabel("Surgical Duration (Minutes)", fontsize=10, labelpad=6)
     axes[1].grid(True, linestyle="--", alpha=0.5)
@@ -83,35 +98,41 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
         loc="upper left",
         frameon=True,
         facecolor="white",
-        edgecolor="#cccccc"
+        edgecolor="#cccccc",
     )
-    
+
     # set layout
-    sns.despine(top=True, right=True) # remove top and right spines
+    sns.despine(top=True, right=True)  # remove top and right spines
     plt.tight_layout()
     plt.savefig(output_image_path, dpi=300, bbox_inches="tight")
     plt.close()
 
 
-def generate_markdown_report(df: pl.DataFrame, image_filename: str, output_md_path: str) -> None:
+def generate_markdown_report(
+    df: pl.DataFrame, image_filename: str, output_md_path: str
+) -> None:
     """
     create some descriptive statistics and write to markdown report
     """
     # get sample size
     total_n = df.height
 
-    summary_df = df.group_by("joint_type").agg(
-        n_count=pl.len(),
-        age_mean=pl.col("age_at_procedure").mean().round(1),
-        age_std=pl.col("age_at_procedure").std().round(1),
-        bmi_median=pl.col("bmi").median().round(1),
-        bmi_q25=pl.col("bmi").quantile(0.25).round(1),
-        bmi_q75=pl.col("bmi").quantile(0.75).round(1),
-        surg_mean=pl.col("surgical_duration_min").mean().round(1),
-        surg_std=pl.col("surgical_duration_min").std().round(1),
-        readmit_count=pl.col("readmit_90day").sum(),
-        readmit_pct=(pl.col("readmit_90day").mean() * 100).round(1)
-    ).sort("joint_type")
+    summary_df = (
+        df.group_by("joint_type")
+        .agg(
+            n_count=pl.len(),
+            age_mean=pl.col("age_at_procedure").mean().round(1),
+            age_std=pl.col("age_at_procedure").std().round(1),
+            bmi_median=pl.col("bmi").median().round(1),
+            bmi_q25=pl.col("bmi").quantile(0.25).round(1),
+            bmi_q75=pl.col("bmi").quantile(0.75).round(1),
+            surg_mean=pl.col("surgical_duration_min").mean().round(1),
+            surg_std=pl.col("surgical_duration_min").std().round(1),
+            readmit_count=pl.col("readmit_90day").sum(),
+            readmit_pct=(pl.col("readmit_90day").mean() * 100).round(1),
+        )
+        .sort("joint_type")
+    )
 
     hips = summary_df.filter(pl.col("joint_type") == "HIP")
     knees = summary_df.filter(pl.col("joint_type") == "KNEE")
