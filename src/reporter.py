@@ -136,7 +136,7 @@ def generate_markdown_report(df: pl.DataFrame, image_filename: str, output_md_pa
 
 ## Demographic & Procedural Characteristics
 
-| Variable / Stratum | Hip (N = {h_n}) | Knee (N = {k_n}) | Total Cohort (N = {total_n}) |
+| Variable | Hip (N = {h_n}) | Knee (N = {k_n}) | Total Cohort (N = {total_n}) |
 | :--- | :---: | :---: | :---: |
 | **Cohort Distribution, N (%)** | {h_n} ({h_pct:.1f}%) | {k_n} ({k_pct:.1f}%) | {total_n} (100.0%) |
 | **Age at Procedure (Years), Mean ± SD** | {h_age} | {k_age} | -- |
