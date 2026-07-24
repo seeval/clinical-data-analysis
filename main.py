@@ -56,7 +56,7 @@ def main():
     pts = df_src1_raw["raw_pt_id"].unique().to_list()
     df_src3_raw = pl.DataFrame({
         "pt_ref_id": pts,
-        "dob": pd.date_range("1945-01-01", periods=len(pts), freq="D").strftime("%Y-%m-%d"),
+        "dob": (pd.Timestamp.now() - pd.to_timedelta(np.random.normal(65 * 365.25, 10 * 365.25, len(pts)).clip(18 * 365.25, 100 * 365.25), unit="D")).strftime("%Y-%m-%d"),
         "ht_in": np.random.normal(67, 4, size=len(pts)).round(1),
         "wt_lbs": np.random.normal(195, 35, size=len(pts)).round(1)
     })

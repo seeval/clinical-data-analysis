@@ -97,35 +97,59 @@ def generate_markdown_report(df: pl.DataFrame, image_filename: str, output_md_pa
     """
     create some descriptive statistics and write to markdown report
     """
+    # get sample size
+    total_n = df.height
 
-    # calculate stats using polars aggregation
-    stats = df.group_by("joint_type").agg(
-        n=pl.len(),
+    summary_df = df.group_by("joint_type").agg(
+        n_count=pl.len(),
         age_mean=pl.col("age_at_procedure").mean().round(1),
+        age_std=pl.col("age_at_procedure").std().round(1),
         bmi_median=pl.col("bmi").median().round(1),
-        surg_min_mean=pl.col("surgical_duration_min").mean().round(1),
-        readmit_n=pl.col("readmit_90day").sum()
+        bmi_q25=pl.col("bmi").quantile(0.25).round(1),
+        bmi_q75=pl.col("bmi").quantile(0.75).round(1),
+        surg_mean=pl.col("surgical_duration_min").mean().round(1),
+        surg_std=pl.col("surgical_duration_min").std().round(1),
+        readmit_count=pl.col("readmit_90day").sum(),
+        readmit_pct=(pl.col("readmit_90day").mean() * 100).round(1)
     ).sort("joint_type")
 
-    # create a markdown string
-    md_content = f"""# Summary Report
+    hips = summary_df.filter(pl.col("joint_type") == "HIP")
+    knees = summary_df.filter(pl.col("joint_type") == "KNEE")
 
-## Overview
+    # get metrics by strata for formatting
+    h_n, h_pct = hips["n_count"][0], (hips["n_count"][0] / total_n * 100)
+    k_n, k_pct = knees["n_count"][0], (knees["n_count"][0] / total_n * 100)
 
-| Joint Type | N | Mean Age | Median BMI | Mean Surg Min | 90-Day Readmits |
-|---|---|---|---|---|---|
+    h_age = f"{hips['age_mean'][0]} (±{hips['age_std'][0]})"
+    k_age = f"{knees['age_mean'][0]} (±{knees['age_std'][0]})"
+
+    h_bmi = f"{hips['bmi_median'][0]} [{hips['bmi_q25'][0]}–{hips['bmi_q75'][0]}]"
+    k_bmi = f"{knees['bmi_median'][0]} [{knees['bmi_q25'][0]}–{knees['bmi_q75'][0]}]"
+
+    h_surg = f"{hips['surg_mean'][0]} (±{hips['surg_std'][0]})"
+    k_surg = f"{knees['surg_mean'][0]} (±{knees['surg_std'][0]})"
+
+    h_readm = f"{hips['readmit_count'][0]} ({hips['readmit_pct'][0]}%)"
+    k_readm = f"{knees['readmit_count'][0]} ({knees['readmit_pct'][0]}%)"
+
+    md_content = f"""# Clinical Summary Report
+
+## Demographic & Procedural Characteristics
+
+| Variable / Stratum | Hip (N = {h_n}) | Knee (N = {k_n}) | Total Cohort (N = {total_n}) |
+| :--- | :---: | :---: | :---: |
+| **Cohort Distribution, N (%)** | {h_n} ({h_pct:.1f}%) | {k_n} ({k_pct:.1f}%) | {total_n} (100.0%) |
+| **Age at Procedure (Years), Mean ± SD** | {h_age} | {k_age} | -- |
+| **Body Mass Index (BMI), Median [IQR]** | {h_bmi} | {k_bmi} | -- |
+| **Surgical Duration (Minutes), Mean ± SD** | {h_surg} | {k_surg} | -- |
+| **90-Day Readmission Rate, N (%)** | {h_readm} | {k_readm} | -- |
+
+---
+
+## Graph Distributions
+
+![Figures]({image_filename})
 """
 
-    for row in stats.iter_rows(named=True):
-        md_content += f"| {row['joint_type']} | {row['n']} | {row['age_mean']} | {row['bmi_median']} | {row['surg_min_mean']} | {row['readmit_n']} |\n"
-
-    # embed images into markdown 
-    md_content += f"""
-## Analytical Distributions
-
-![Clinical Distributions]({image_filename})
-"""
-
-    # write markdown file
     with open(output_md_path, "w", encoding="utf-8") as f:
         f.write(md_content)
