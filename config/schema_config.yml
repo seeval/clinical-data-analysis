@@ -1,5 +1,4 @@
 dataset_name: "multi_source_polars"
-strict: false
 
 # Source 1 Column Remapping
 column_mappings:

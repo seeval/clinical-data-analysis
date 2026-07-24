@@ -45,12 +45,13 @@ def impute_quarantine_from_clean(
     """
     replaces missing or out of range in quarantine with median from strata in clean df
     """
+
     # helper to create a "filtered" version of a column for median calculation
     # ensuring sentinel values do not pollute the baseline medians.
     def _clean_expr(col_name):
         return pl.col(col_name).filter(pl.col(col_name) != sentinel_value)
 
-    # compute stratum-level medians 
+    # compute stratum-level medians
     stratum_medians_lookup = clean_df.group_by(strata_col).agg(
         [_clean_expr(col).median().alias(f"{col}_ref_median") for col in target_cols]
     )
@@ -63,7 +64,7 @@ def impute_quarantine_from_clean(
         [
             pl.when(pl.col(col) != sentinel_value)
             .then(pl.col(col))
-            .otherwise(None)  
+            .otherwise(None)
             .alias(col)
             for col in target_cols
         ]

@@ -30,6 +30,7 @@ from src.reporter import generate_figures, generate_markdown_report
 CONFIG_PATH = "config/schema_config.yml"
 OUTPUT_REPORT_PATH = "reports/clinical_data_summary.md"
 
+
 def main():
     print(f"\nStarting Run...")
     # 1. load config
@@ -108,17 +109,19 @@ def main():
     )
 
     # would move this to logging, embed in filter function, make dynamic
-    print(f"Filtered {df_proc.height - df_proc_filtered.height} rows from procedure df on most recent procedure date\n")
+    print(
+        f"Filtered {df_proc.height - df_proc_filtered.height} rows from procedure df on most recent procedure date\n"
+    )
 
     df_readmission = map_column_names(df_src2_raw, col_maps["source_2_readmissions"])
     df_pat = map_column_names(df_src3_raw, col_maps["source_3_baseline"])
-    
+
     print(f"--- Mapped DataFrame Overview --- \n")
     mapped_df_dict = {
-            "Filtered Procedures": df_proc_filtered,
-            "Readmissions": df_readmission,
-            "Patient Data": df_pat
-            }
+        "Filtered Procedures": df_proc_filtered,
+        "Readmissions": df_readmission,
+        "Patient Data": df_pat,
+    }
     for name, df in mapped_df_dict.items():
         print(f"--- {name} ---")
         print(f"{df.head()}\n")
@@ -208,7 +211,7 @@ def main():
     )
 
     print(f"Cleaned BMI:\n{clean_bmi_df}")
-    
+
     print(f"\nGenerating Figures...")
     # generate figures first
     generate_figures(df=clean_df, output_image_path="reports/figures.png")
@@ -221,6 +224,7 @@ def main():
     )
 
     print(f"Report Generated At {OUTPUT_REPORT_PATH}")
+
 
 if __name__ == "__main__":
     main()
