@@ -54,7 +54,7 @@ def generate_figures(df: pl.DataFrame, output_image_path: str) -> None:
     )
     axes[0].set_xlabel("Surgical Joint Type", fontsize=10, labelpad=6)
     axes[0].set_ylabel(
-        "Body Mass Index (BMI, $\\mathrm{kg/m^2}$)", fontsize=10, labelpad=6
+        "Body Mass Index (BMI, $\\mathrm{lbs/in^2}$)", fontsize=10, labelpad=6
     )
     axes[0].grid(True, linestyle="--", alpha=0.5, axis="y")
 
