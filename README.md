@@ -114,6 +114,3 @@ To scale this pipeline for production environments, the following minimum archit
 
 ### 2. Comprehensive Test Coverage
 * **Edge Case Testing**: Expand `pytest` coverage to explicitly assert behavior against null-heavy data, empty DataFrames, duplicate primary keys, and unexpected data types.
-
-### 3. Orchestration & Lineage Tracking
-* Transition from hardcoded configuration files to environment-driven parameterization.
