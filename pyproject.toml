@@ -1,0 +1,19 @@
+[project]
+name = "clinical-data-analysis"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "black>=26.5.1",
+    "pandas>=3.0.5",
+    "polars>=1.43.0",
+    "pyarrow>=25.0.0",
+    "pyyaml>=6.0.3",
+    "seaborn>=0.13.2",
+    "typing>=3.10.0.0",
+]
+
+[tool.black]
+target-version = ['py312']
+line-length = 88

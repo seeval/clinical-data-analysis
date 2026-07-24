@@ -1,0 +1,75 @@
+dataset_name: "multi_source_polars"
+strict: false
+
+# Source 1 Column Remapping
+column_mappings:
+  source_1_procedures:
+    raw_proc_id: "procedure_id"
+    raw_pt_id: "patient_id"
+    hosp_code: "hospital_id"
+    surg_dt: "procedure_date"
+    joint_cd: "joint_type_raw"
+    surg_time_min: "surgical_duration_min"
+
+  source_2_readmissions:
+    case_ref_id: "procedure_id"
+    re_dt: "readmission_date"
+    diag_cd: "readmit_icd10"
+
+  source_3_baseline:
+    pt_ref_id: "patient_id"
+    dob: "birth_date"
+    ht_in: "height_inches"
+    wt_lbs: "weight_lbs"
+
+# Categorical Enum Remapping
+value_mappings:
+  joint_type_raw:
+    10: "HIP"
+    20: "KNEE"
+
+# Polars Data Contract & Expression Checks
+columns:
+  procedure_id:
+    dtype: "String"
+    nullable: false
+    checks:
+      regex: "^PRC_\\d{6}$"
+
+  patient_id:
+    dtype: "String"
+    nullable: false
+    checks:
+      regex: "^PAT_\\d{4}$"
+
+  hospital_id:
+    dtype: "String"
+    nullable: false
+
+  joint_type:
+    dtype: "String"
+    nullable: false
+    checks:
+      isin: ["HIP", "KNEE"]
+
+  bmi:
+    dtype: "Float64"
+    nullable: false
+    checks:
+      range:
+        min: 12.0
+        max: 80.0
+
+  age_at_procedure:
+    dtype: "Float64"
+    nullable: false
+    checks:
+      range:
+        min: 18.0
+        max: 110.0
+
+  readmit_90day:
+    dtype: "Int64"
+    nullable: false
+    checks:
+      isin: [0, 1]
