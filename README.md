@@ -1,6 +1,6 @@
 # Clinical Data Processing Pipeline Example
 
-A Polars-based data pipeline for standardizing, joining, validating, and reporting on multi-source clinical data.
+A Polars-based data pipeline for standardizing, joining, validating, and reporting on multi-source synthetic clinical data.
 
 ## Overview
 
@@ -39,7 +39,7 @@ This project processes clinical data through a structured processing workflow:
 ├── tests/
 │   └── test_standardizer.py
 ├── main.py
-├── pyproject.toml
+└── pyproject.toml
 ```
 
 ## Setup & Installation
