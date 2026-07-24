@@ -39,7 +39,7 @@ This project processes clinical data through a structured processing workflow:
 ├── tests/
 │   └── test_standardizer.py
 ├── main.py
-├── pyproject.toml
+└── pyproject.toml
 ```
 
 ## Setup & Installation
