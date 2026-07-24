@@ -1,6 +1,6 @@
 # Clinical Data Processing Pipeline Example
 
-A Polars-based data pipeline for standardizing, joining, validating, and reporting on multi-source clinical data.
+A Polars-based data pipeline for standardizing, joining, validating, and reporting on multi-source synthetic clinical data.
 
 ## Overview
 
