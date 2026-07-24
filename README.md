@@ -55,8 +55,8 @@ This project uses `uv` for dependency and environment management.
 
 1. Clone the repository and navigate to the project root:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/seeval/clinical-data-analysis 
+   cd clinical-data-analysis
    ```
 
 2. Install dependencies and build the virtual environment:
