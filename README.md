@@ -113,4 +113,7 @@ To scale this pipeline for production environments, the following minimum archit
 * Implement log streams to capture runtime metadata,
 
 ### 2. Comprehensive Test Coverage
-* **Edge Case Testing**: Expand `pytest` coverage to explicitly assert behavior against null-heavy data, empty DataFrames, duplicate primary keys, and unexpected data types.
+* Expand `pytest` coverage to explicitly assert behavior against null-heavy data, empty DataFrames, duplicate primary keys, and unexpected data types.
+
+### 3. Export Capabilities
+* Dynamic export capabilities to SAS, Excel, CSV, Parquet, etc.
